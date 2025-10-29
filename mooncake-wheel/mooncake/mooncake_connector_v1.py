@@ -6,8 +6,8 @@ Decode: --kv-transfer-config '{"kv_connector":"MooncakeConnector","kv_role":"kv_
 Proxy: Running tests/v1/kv_connector/nixl_integration/toy_proxy_server.py
 """
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
 import contextlib
 import threading
@@ -650,22 +650,14 @@ class MooncakeConnectorWorker:
         logger.debug("Size of encoded MooncakeAgentMetadata: %s bytes",
                      str(size_in_bytes))
 
-        logger.debug("Sending pull request for %s on path: %s", req_ids, path)
         # Send query for the request.
         with zmq_ctx(zmq.REQ, path) as sock:
-            logger.debug("encoded_data: %s", encoded_data)
             sock.send(encoded_data)
-            logger.debug("sock send finished!")
             ret_msg = sock.recv()
-            logger.debug("recv ret_msg: %s", ret_msg)
             assert ret_msg == TRANS_DONE
-            logger.debug("trans done!")
 
-        logger.debug("start update finished_recving_reqs")
         with self.finished_recving_reqs.lock:
             self.finished_recving_reqs.set.update(req_ids)
-
-        logger.debug("pulling kv_caches for %s finished", req_ids)
 
     def group_kv_pull(self, metadata: MooncakeConnectorMetadata):
         kv_pulls = defaultdict(list)
@@ -675,9 +667,7 @@ class MooncakeConnectorWorker:
                 "Num local_block_ids: %s.", req_id, len(meta.local_block_ids))
             path = make_zmq_path("tcp", meta.remote_host,
                                  meta.remote_port + self.tp_rank)
-            logger.debug("path: %s", path)
             kv_pulls[path].append((req_id, meta.local_block_ids))
-            logger.debug("kv_pulls: %s", kv_pulls)
         return kv_pulls
 
     def start_load_kv(self, metadata: MooncakeConnectorMetadata):
